@@ -19,28 +19,10 @@ module Troupe
             message: "Expected context to include property '#{property_name}'."
           )
         end
-
-        extra_properties.each do |property_name|
-          violation_table[property_name] = ContractViolation.new(
-            self,
-            property: property_name,
-            message: "Expected context not to include property '#{property_name}'."
-          )
-        end
       end
 
       def missing_properties
         @missing_properties ||= self.class.property_table.missing_properties(context)
-      end
-
-      def extra_properties
-        @extra_properties ||= begin
-          if self.class.contract_open?
-            []
-          else
-            self.class.property_table.undeclared_properties(context)
-          end
-        end
       end
 
       def ensure_contract_defaults
@@ -53,7 +35,7 @@ module Troupe
         return if violation_table.empty?
         violation_table.each do |property_name, violation|
           if block = self.class.property_table.get(property_name).on_violation
-            block.call(context)
+            block.call(violation, context)
           elsif self.class.on_violation_block
             self.class.on_violation_block.call(violation, context)
           else
@@ -66,11 +48,6 @@ module Troupe
     module ClassMethods
       # Core DSL
       #
-      def contract_type(value)
-        raise "Invalid contract type '#{value}'" unless Troupe::Contract::VALID_TYPES.include?(value)
-        @contract_type = value
-      end
-
       def property(attr, opts={}, &block)
         opts.merge!(default: block) if block
         property_table.set(attr, opts)
@@ -136,14 +113,6 @@ module Troupe
             context[attr] = value
           end
         end
-      end
-
-      def contract_open?
-        [nil, :open].include?(@contract_type)
-      end
-
-      def contract_closed?
-        !contract_open?
       end
 
       def property_table

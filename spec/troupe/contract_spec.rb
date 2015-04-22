@@ -9,31 +9,6 @@ module Troupe
       contracted
     end
 
-    describe "::contract_type" do
-      context "contract open" do
-        let(:contracted) {
-          build_contracted do
-            expects :property
-          end
-        }
-        it "does not raise an error if the context includes an unexpected property" do
-          expect { contracted.call(property: :foo, bar: 1) }.not_to raise_error
-        end
-      end
-
-      context "contract closed" do
-        let(:contracted) {
-          build_contracted do
-            contract_type :closed
-            expects :property
-          end
-        }
-        it "raises an error if the context includes an unexpected property" do
-          expect { contracted.call(property: :foo, bar: 1) }.to raise_error
-        end
-      end
-    end
-
     describe "::property" do
       it "raises an error for an invalid value for the 'presence' option" do
         expect {
@@ -42,13 +17,21 @@ module Troupe
           end
         }.to raise_error
       end
+
+      it "does not raise an error if the context includes an unexpected property" do
+        contracted = build_contracted do
+          property :property, presence: :expected
+        end
+        expect { contracted.call(property: :foo, bar: 1) }.not_to raise_error
+      end
+
     end
 
     context "with an on_violation_for method" do
       it "can fail the context" do
         contracted = build_contracted do
           expects :property
-          on_violation_for(:property) do |context|
+          on_violation_for(:property) do |violation, context|
             context.fail!(error: 'Property failed')
           end
         end
@@ -98,11 +81,10 @@ module Troupe
     context "with on_violation and on_violation_for methods" do
       let(:contracted) {
         build_contracted do
-          contract_type :closed
-          expects :property
+          expects :property, :property2
 
-          on_violation_for(:property2) do |context|
-            context.fail!(error: context[:property2])
+          on_violation_for(:property2) do |violation, context|
+            context.fail!(error: 'Property2 is missing')
           end
 
           on_violation do |violation, context|
@@ -112,9 +94,9 @@ module Troupe
       }
 
       it "honors the on_violation_for" do
-        interactor = contracted.call(property: 'Belongs here', property2: 'Should not be here')
+        interactor = contracted.call(property: 'Belongs here')
         expect(interactor).to be_failure
-        expect(interactor.error).to eq('Should not be here')
+        expect(interactor.error).to eq('Property2 is missing')
       end
 
       it "honors the on_violation" do
