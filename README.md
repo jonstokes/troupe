@@ -1,2 +1,2 @@
 # troupe
-These actors have contracts
+These (inter)actors have contracts
