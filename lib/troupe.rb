@@ -16,13 +16,12 @@ module Troupe
 
     Interactor.class_eval do
       def run!
+        validate_contract_expectations
         with_hooks do
-          validate_contract_expectations
           call
-          ensure_contract_defaults
-          check_each_violation
           context.called!(self)
         end
+        ensure_contract_defaults
       rescue
         context.rollback!
         raise

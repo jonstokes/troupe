@@ -12,13 +12,8 @@ module Troupe
       end
 
       def validate_contract_expectations
-        missing_properties.each do |property_name|
-          violation_table[property_name] = ContractViolation.new(
-            self,
-            property: property_name,
-            message: "Expected context to include property '#{property_name}'."
-          )
-        end
+        populate_violation_table
+        check_each_violation
       end
 
       def missing_properties
@@ -28,6 +23,16 @@ module Troupe
       def ensure_contract_defaults
         self.class.all_properties.each do |attr|
           send(attr) if context[attr].nil? && self.class.default_for(attr)
+        end
+      end
+
+      def populate_violation_table
+        missing_properties.each do |property_name|
+          violation_table[property_name] = ContractViolation.new(
+            self,
+            property: property_name,
+            message: "Expected context to include property '#{property_name}'."
+          )
         end
       end
 
