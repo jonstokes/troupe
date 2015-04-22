@@ -1,5 +1,6 @@
 # troupe
-Troupe is a contract DSL for the interactor gem.
+Troupe is a contract DSL for the interactor gem. It's backwards-compatible with
+interactor 3.1.0 and higher, so you can introduce it into your codebase gradually.
 
 # Requirements
 Ruby 2.0 or higher
@@ -43,7 +44,7 @@ class PlaceOrder
 end
 ```
 
-Here's a quick description of all the verbs in the DSL:
+Here's a quick description of all the main verbs in the DSL:
 
 ### expects
 E.g. `expects :property1, :property2`
@@ -77,17 +78,54 @@ permitted properties, provided properties. So anything declared with `provides` 
 expected or permitted already defined.
 
 ### A quick word about order
-Now, above I said "post-`call` evaluations". What I mean by that is the following: the default values given for the verbs
-above are lazy evaluated within the interactor's `call` method. So in the example above, the code `User.find(user_id`)` would
-not be evaluated until you actually call `user` from within `call` or one of the hooks, and then it would be evaluated only if the interactor
-had been called without the `:user` key in the context object. If the `call` method ends and all the hooks are run and `user` is still `nil`,
+Above I used the phrase "post-`call` evaluations". What I mean by that is the following:
+
+The default values given for the verbs above are lazy evaluated within your interactor's hooks and `call` method. So in the example above,
+the code `User.find(user_id`)` would not be evaluated until you actually reference `user` from within `call` or one of the hooks,
+and then it would be evaluated only if the interactor had been called without the `:user` key in the context object.
+
+If the `call` method ends and all the hooks are run and `user` is still `nil`,
 then an `ensure_contract_defaults` method will run and try to call any `default` blocks or methods
 that have been set for that property.
 
-Ok, back to the DSL...
+## Advanced options
+
+A contract violation will raise a `Troupe::ContractViolation` error, but it doesn't have to. You can handle violations
+yourself with the following hooks.
 
 ### on_violation
-/Description needed/
+Example:
+```ruby
+class MyInteractor
+  include Troupe
+
+  expects :property1, :property2
+
+  on_violation do |violation, context|
+    if violation.property == :property1
+      puts "Property1 violated the contract!"
+    else
+      context.fail!(error: violation.message)
+    end
+  end
+end
+```
+The above should be self-explanatory. One thing to note: `ContractViolation` has a `property` method that returns
+the name of the property that raised the violation, and a `message` method that returns the error message that would
+otherwise be raised.
 
 ### on_violation_for
-/Description needed/
+Example:
+```ruby
+class MyInteractor
+  include Troupe
+
+  expects :property1
+
+  on_violation_for(:property1) do |violation, context|
+    context.fail!(error: violation.message)
+  end
+end
+```
+Yep, it's technically redundant to `on_violation`, but can make the hooks a little cleaner if you're only
+handling one or two properties.
