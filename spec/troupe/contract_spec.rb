@@ -31,7 +31,7 @@ module Troupe
       it "can fail the context" do
         contracted = build_contracted do
           expects :property
-          on_violation_for(:property) do |violation, context|
+          on_violation_for(:property) do |violation|
             context.fail!(error: 'Property failed')
           end
         end
@@ -57,7 +57,7 @@ module Troupe
       it "can fail the context" do
         contracted = build_contracted do
           expects :property
-          on_violation do |violation, context|
+          on_violation do |violation|
             context.fail!(error: "Property #{violation.property} failed with error: #{violation.message}")
           end
         end
@@ -70,7 +70,7 @@ module Troupe
       it "can raise an error" do
         contracted = build_contracted do
           expects :property
-          on_violation do |violation, context|
+          on_violation do |violation|
             raise "Property #{violation.property} failed with error: #{violation.message}"
           end
         end
@@ -83,11 +83,11 @@ module Troupe
         build_contracted do
           expects :property, :property2
 
-          on_violation_for(:property2) do |violation, context|
+          on_violation_for(:property2) do |violation|
             context.fail!(error: 'Property2 is missing')
           end
 
-          on_violation do |violation, context|
+          on_violation do |violation|
             context.fail!(error: "Property #{violation.property} failed with error: #{violation.message}")
           end
         end

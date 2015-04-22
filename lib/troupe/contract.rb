@@ -39,10 +39,8 @@ module Troupe
       def check_each_violation
         return if violation_table.empty?
         violation_table.each do |property_name, violation|
-          if block = self.class.property_table.get(property_name).on_violation
-            block.call(violation, context)
-          elsif self.class.on_violation_block
-            self.class.on_violation_block.call(violation, context)
+          if block = self.class.property_table.get(property_name).on_violation || self.class.on_violation_block
+            instance_exec(violation, &block)
           else
             raise violation
           end
@@ -107,7 +105,7 @@ module Troupe
             next context[attr] if context.members.include?(attr)
             if default = self.class.default_for(attr)
               if default.is_a?(Proc)
-                context[attr] = default.call
+                context[attr] = instance_exec(&default)
               else
                 context[attr] = self.send(default)
               end

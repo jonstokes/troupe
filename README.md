@@ -101,7 +101,7 @@ class MyInteractor
 
   expects :property1, :property2
 
-  on_violation do |violation, context|
+  on_violation do |violation|
     if violation.property == :property1
       puts "Property1 violated the contract!"
     else
@@ -122,7 +122,7 @@ class MyInteractor
 
   expects :property1
 
-  on_violation_for(:property1) do |violation, context|
+  on_violation_for(:property1) do |violation|
     context.fail!(error: violation.message)
   end
 end
