@@ -99,7 +99,7 @@ module Troupe
       def delegate_properties
         all_properties.each do |attr|
           define_method attr do
-            next context[attr] if context[attr]
+            next context[attr] if context.members.include?(attr)
             if default = self.class.default_for(attr)
               if default.is_a?(Proc)
                 context[attr] = default.call

@@ -32,7 +32,12 @@ module Troupe
       def permitted; select(presence: :permitted); end
       def provided;  select(presence: :provided); end
 
-      def all_properties; @table.keys; end
+      def all_properties
+        expected_properties +
+          permitted_properties +
+          provided_properties
+      end
+
       def expected_properties; expected.keys; end
       def permitted_properties; permitted.keys; end
       def provided_properties; provided.keys; end
