@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
+source 'https://rubygems.com'
 
 # Specify your gem's dependencies in troupe.gemspec
 gemspec
