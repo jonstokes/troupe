@@ -1,6 +1,7 @@
-[![Code Climate](https://codeclimate.com/github/jonstokes/troupe/badges/gpa.svg)](https://codeclimate.com/github/jonstokes/troupe)
-
 # troupe
+[![Code Climate](https://codeclimate.com/github/jonstokes/troupe/badges/gpa.svg)](https://codeclimate.com/github/jonstokes/troupe)
+[![Build Status](https://travis-ci.org/jonstokes/troupe.svg)](https://travis-ci.org/jonstokes/troupe)
+
 Troupe is a contract DSL for the [interactor gem](https://github.com/collectiveidea/interactor). It's backwards-compatible with
 interactor 3.1.0 and higher, so you can introduce it into your codebase gradually.
 
