@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{This gem layers a contract DSL onto the interactor gem.}
   spec.homepage      = "http://github.com/jonstokes/troupe"
   spec.license       = "MIT"
-  
+
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
