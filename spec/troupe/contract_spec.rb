@@ -107,6 +107,29 @@ module Troupe
       end
     end
 
+    context "is lazy evaluated" do
+      let(:contracted) {
+        build_contracted do
+          permits :property1 do
+            property2
+          end
+
+          permits :property2 do
+            property1
+          end
+
+          def call
+            property1
+          end
+        end
+      }
+
+      it "does not infinitely recurse" do
+        expect { contracted.call(property2: :foo) }.not_to raise_error
+      end
+
+    end
+
     context "with an expects method" do
       let(:contracted) {
         build_contracted do

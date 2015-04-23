@@ -7,6 +7,8 @@ module Troupe
         extend ClassMethods
       end
 
+      private
+
       def violation_table
         @violation_table ||= {}
       end
@@ -17,12 +19,12 @@ module Troupe
       end
 
       def missing_properties
-        @missing_properties ||= self.class.property_table.missing_properties(context)
+        @missing_properties ||= self.class.missing_properties(context)
       end
 
       def ensure_contract_defaults
         self.class.all_properties.each do |attr|
-          send(attr) if context[attr].nil? && self.class.default_for(attr)
+          send(attr)
         end
       end
 
@@ -39,12 +41,17 @@ module Troupe
       def check_each_violation
         return if violation_table.empty?
         violation_table.each do |property_name, violation|
-          if block = self.class.property_table.get(property_name).on_violation || self.class.on_violation_block
+          if block = violation_block_for(property_name)
             instance_exec(violation, &block)
           else
             raise violation
           end
         end
+      end
+
+      def violation_block_for(property_name)
+        self.class.violation_block_for(property_name) ||
+          self.class.on_violation_block
       end
     end
 
@@ -60,11 +67,8 @@ module Troupe
 
       def on_violation_for(*args, &block)
         args.each do |arg|
-          if property = property_table.get(arg)
-            property.on_violation = block
-          else
-            property_table.set(arg, on_violation: block)
-          end
+          next unless property = property_table.get(arg)
+          property.on_violation = block
         end
       end
 
@@ -73,6 +77,7 @@ module Troupe
       end
 
       # Sugar for core DSL
+      #
       def expects(*args, &block)
         presence_is(:expected, args, block)
       end
@@ -85,31 +90,39 @@ module Troupe
         presence_is(:provided, args, block)
       end
 
-      def presence_is(presence, args, block)
-        opts = args.detect { |arg| arg.is_a?(Hash) } || {}
-        opts.merge!(presence: presence)
-        args.reject! { |arg| arg.is_a?(Hash) }
-
-        args.each do |arg|
-          property(arg, opts, &block)
-        end
-      end
-
       def on_violation_block
         @on_violation_block
       end
+
+      def expected_properties;  property_table.expected_properties; end
+      def permitted_properties; property_table.permitted_properties; end
+      def provided_properties;  property_table.provided_properties; end
+      def all_properties;       property_table.all_properties; end
+      def default_for(attr);    property_table.default_for(attr); end
+      def violation_block_for(attr);     property_table.get(attr).on_violation; end
+      def missing_properties(context);   property_table.missing_properties(context); end
+
+      def expected_and_permitted_properties
+        property_table.expected_and_permitted_properties
+      end
+
+      private
+
+      def property_table
+        @property_table ||= PropertyTable.new
+      end
+
 
       def delegate_properties
         all_properties.each do |attr|
           define_method attr do
             next context[attr] if context.members.include?(attr)
-            if default = self.class.default_for(attr)
-              if default.is_a?(Proc)
-                context[attr] = instance_exec(&default)
-              else
-                context[attr] = self.send(default)
-              end
-            end
+            default = self.class.default_for(attr)
+            context[attr] = if default.is_a?(Proc)
+                              instance_exec(&default)
+                            elsif default.is_a?(Symbol)
+                              send(default)
+                            end
           end
 
           define_method "#{attr}=" do |value|
@@ -118,18 +131,14 @@ module Troupe
         end
       end
 
-      def property_table
-        @property_table ||= PropertyTable.new
-      end
+      def presence_is(presence, args, block)
+        opts = args.detect { |arg| arg.is_a?(Hash) } || {}
+        opts.merge!(presence: presence)
+        args.reject! { |arg| arg.is_a?(Hash) }
 
-      def expected_properties;  property_table.expected_properties; end
-      def permitted_properties; property_table.permitted_properties; end
-      def provided_properties;  property_table.provided_properties; end
-      def all_properties;       property_table.all_properties; end
-      def default_for(attr);    property_table.default_for(attr); end
-
-      def expected_and_permitted_properties
-        property_table.expected_and_permitted_properties
+        args.each do |arg|
+          property(arg, opts, &block)
+        end
       end
     end
   end
