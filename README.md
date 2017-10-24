@@ -72,7 +72,7 @@ permits(:property1, :property2) do
    'default value'
 end
 ```
-If either `property` or `property` are when the interactor is called, then the above code will set the nil property (or properties) to 'default value'. The default applies to every listed property. If you want to set individual defaults, use separate `permits` clauses for each property.
+If either `property1` or `property2` are not defined when the interactor is called, then the above code will set the nil property (or properties) to 'default value'. The default applies to every listed property. If you want to set individual defaults, use separate `permits` clauses for each property.
 
 ### provides
 E.g. `provides :property1, :property2, default: :get_property_default`
@@ -89,11 +89,11 @@ The TL;DR version of this section can be expressed in two simple rules:
  1. All property defaults are lazy evaluated at the time that they're first called in the hooks or in the `call` method.
  2. Any property defaults that have not been so evaluated once the interactor is completely done will be evaluated in the order that they were declared, subject to the constraint that expected defaults go first, then permitted ones, then provided ones.
 
-No for the longer explanation:
+Now for the longer explanation:
 
-The default values given for the verbs above are lazy evaluated within your interactor's hooks and `call` method. So in the example above, the code `User.find(user_id)` would not be evaluated until you actually reference `user` from within `call` or one of the hooks, and then it would be evaluated only if the interactor had been called without the `:user` key in the context object.
+The default values given for the verbs above are lazy evaluated within your interactor's hooks and `call` method. So in the example above, the code `User.find(user_id)` would not be evaluated until you actually referenced `user` from within `call` or one of the hooks, and then it would be evaluated only if the interactor had been called without the `:user` key in the context object.
 
-If the `call` method ends and all the hooks are run and `user` the getter for `user` has still not been called and there still is no `user` key in the context, then an `ensure_contract_defaults` method will run and will call its getter just to ensure that it gets referenced at least once and therefore added to the context with any default that may have been set.
+If the `call` method ends and all the hooks are run and the getter for `user` has still not been called and there still is no `user` key in the context, then an `ensure_contract_defaults` method will run and will call its getter just to ensure that it gets referenced at least once and therefore added to the context with any default that may have been set.
 
 In other words, after the `call` and all of the hooks are run, the interactor essentially does the following:
 
@@ -102,7 +102,7 @@ In other words, after the `call` and all of the hooks are run, the interactor es
   send(property)
 end
 ```
-That call to `send(property)` just returns `context[property]` if that propert is a key in the context, otherwise it checks for a default block and tries to set the key with that.
+That call to `send(property)` just returns `context[property]` if that property is a key in the context, otherwise it checks for a default block and tries to set the key with that.
 
 What all of this means is that the following code is just not a problem and behaves predictably every time, provided that you call `MyInteractor` with either `property1` or `property2` set:
 ```ruby
@@ -145,7 +145,7 @@ class MyInteractor
   end
 end
 ```
-The above should be self-explanatory. One thing to note: a `ContractViolation` object has a `property` method that returns the name of the property that raised the violation, and a `message` method that returns the error message that would otherwise be raised.
+The code above should be self-explanatory. One thing to note: a `ContractViolation` object has a `property` method that returns the name of the property that raised the violation, and a `message` method that returns the error message that would otherwise be raised.
 
 ### on_violation_for
 Example:
