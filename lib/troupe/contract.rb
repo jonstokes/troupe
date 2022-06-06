@@ -5,8 +5,12 @@ module Troupe
     def self.included(base)
       base.class_eval do
         extend ClassMethods
+        include InstanceMethods
       end
 
+    end
+
+    module InstanceMethods
       private
 
       def violation_table
