@@ -15,7 +15,7 @@ module Troupe
           build_contracted do
             property :property, presence: :foo
           end
-        }.to raise_error
+        }.to raise_error(RuntimeError, "Invalid value 'foo' for option presence")
       end
 
       it "does not raise an error if the context includes an unexpected property" do
